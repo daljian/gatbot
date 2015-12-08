@@ -34,4 +34,5 @@ class Raket extends Competition{
         return 0
     }
 
+
 }

@@ -6,24 +6,25 @@ import se.teddy.atg.rest.ATGApi
  * Created by ia on 2015-11-15.
  */
 class Horse implements Comparable{
-    private Map<Integer, List<Long>> raceTimes = new HashMap<Integer, List<Long>>()
-    private int startNumber;
-    private String id;
-    private String name;
-    private int upComingRaceDistance
-    private final int NO_TIME = 100000
+    Map<Integer, List<Long>> raceTimes = new HashMap<Integer, List<Long>>()
+    int startNumber;
+    String id;
+    String name;
+    int upComingRaceDistance
+    final int NO_TIME = 100000
     //For simulations we want to limit known facts by setting a historical date
-    private String dateString;
+    String dateString;
     /**
      * Positive means trending faste, negative means teending slower
      */
     private Map <Integer, Long> trends = new HashMap<Integer, Long>()
-    public Horse(def startNumber, def id, def name, def dateString, int upcomingRaceDistance){
+    public Horse(def startNumber, def id, def name, def dateString,
+                 int upcomingRaceDistance){
+        this.upComingRaceDistance = upcomingRaceDistance
         this.startNumber = startNumber
         this.id = id
         this.name = name
         this.dateString = dateString
-        this.upComingRaceDistance = upcomingRaceDistance
         //print "[${id}:${name}]"
 
         populate();

@@ -36,13 +36,17 @@ abstract class Competition {
         this.id = data[KEY.ID.value];
 
     }
+    public def getName(){
+        return name
+    }
+
     public void populate(){
         this.details = ATGApi.instance.getCompetitionData(id)
-
     }
     public List<Race> getRaces(){
         List<String> raceIDs = overview.get(KEY.RACES.value)
         List<Race> races = new ArrayList<Race>(raceIDs.size())
+        def raceNumber = 0;
         details.races.each{ race ->
             if (!RACE.REPO.containsKey(race.id)){
                 RACE.REPO.put(race.id, new Race(race))

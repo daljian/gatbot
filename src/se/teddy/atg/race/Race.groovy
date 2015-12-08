@@ -2,6 +2,7 @@ package se.teddy.atg.race
 
 import groovy.json.JsonBuilder
 import se.teddy.atg.horse.Horse
+import se.teddy.atg.horse.OddsAwareHorse
 import se.teddy.atg.horse.WinningHorse
 import se.teddy.atg.utils.CONDITIONS
 import se.teddy.atg.utils.DATE
@@ -17,6 +18,7 @@ class Race {
     private def scratchings;
     private List<WinningHorse> winners = new ArrayList<WinningHorse>(3)
     private List<Horse> lineUp = new ArrayList<>()
+    private def oddsArray = []
     private boolean cancelled = false;
     /**
      *
@@ -29,14 +31,16 @@ class Race {
         }else if (data.status.equals("cancelled")) {
             cancelled = true
         }else{
-            try{
-                populate();
-                RACE.REPO.put(data.id, this)
-            }catch(Exception ex){
-                println "Could not populate race ${data.id}"
-            }
+            populate();
+            RACE.REPO.put(data.id, this)
         }
 
+    }
+    boolean isCancelled(){
+        return cancelled
+    }
+    void setOddsArray(def oddsArray){
+        this.oddsArray = oddsArray
     }
     /**
      *
@@ -86,7 +90,7 @@ class Race {
      * That data is set by this method
      */
     private populate(){
-        try{
+        if (hasWinners()){
             def first = data.pools.plats?.result?.winners?.first[0]
             def second = data.pools.plats?.result?.winners?.second[0]
             def third = data.pools.plats?.result?.winners?.third[0]
@@ -99,27 +103,30 @@ class Race {
                     }
                 }
             }
-            scratchings = data.result.scratchings
-            if (scratchings == null){
-                scratchings = []
-            }
+        }
+        scratchings = data?.result?.scratchings
+        if (scratchings == null){
+            scratchings = []
+        }
 
-            def startNumber = 1;
-            data.starts.each{start ->
-                if (!scratchings.contains(startNumber)){
-                    lineUp.add(new Horse(startNumber, start.horse.id,start.horse.name, DATE.INSTANCE.toString(), data.distance))
-                }
-                startNumber++
+        def startNumber = 1;
+        data.starts.each{start ->
+            if (!scratchings.contains(startNumber)){
+                lineUp.add(new OddsAwareHorse(startNumber, start.horse.id,start.horse.name, DATE.INSTANCE.toString(), data.distance, start.pools.vinnare.odds))
             }
-            Collections.sort(lineUp)
-            if (isBettable()){
+            startNumber++
+        }
+        Collections.sort(lineUp)
+        if (hasWinners()){
+            if (!isBettable()){
                 RACESTATS.REPO.addPass(data.id)
             }else if (winners[0].startNumber == lineUp.get(0).startNumber){
                 RACESTATS.REPO.addWin(data.id)
             }else{
                 RACESTATS.REPO.addLoss(data.id)
             }
-        }catch(Exception ex){
+        }else{
+            // No stats on this race yet...
         }
     }
     /**
@@ -127,7 +134,8 @@ class Race {
      * @return
      */
     public boolean hasWinners(){
-        return winners.size() > 0;
+        def retVal =  data?.pools?.plats?.result?.winners != null
+        retVal
     }
 
     public List<WinningHorse> getWinners(){

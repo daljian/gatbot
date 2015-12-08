@@ -46,5 +46,11 @@ enum RACESTATS {
     public void clear(){
         initStats();
     }
-
+    /**
+     *
+     * @return <id,result> where result is one of {WIN,PASS,LOSS}
+     */
+    public Map<String, String> getStats(){
+        return stats;
+    }
 }

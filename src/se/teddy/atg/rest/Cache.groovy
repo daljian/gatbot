@@ -2,6 +2,7 @@ package se.teddy.atg.rest
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import se.teddy.atg.utils.DATE
 import se.teddy.atg.utils.ZIPPER
 
 import java.nio.charset.Charset
@@ -28,9 +29,11 @@ class Cache {
         this.basePath = Paths.get(basePath).toRealPath(LinkOption.NOFOLLOW_LINKS)
     }
     public put(String path, Map map){
-        createDirectories(getPath(path).parent)
-        createFile(getPath(path)).write(ZIPPER.UTIL.zip(new JsonBuilder(map).toPrettyString()));
-        //println(" --> ${getPath(path)}")
+        //Only cache past
+        if (DATE.INSTANCE.isPast()){
+            createDirectories(getPath(path).parent)
+            createFile(getPath(path)).write(ZIPPER.UTIL.zip(new JsonBuilder(map).toPrettyString()));
+        }
     }
     public Map get(String path){
         def map = null

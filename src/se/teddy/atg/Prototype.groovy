@@ -11,9 +11,9 @@ import se.teddy.atg.utils.WALLET
  */
 
 
-DATE.INSTANCE.set("2014-12-31")
+DATE.INSTANCE.set("2013-10-31")
 
-while(!DATE.INSTANCE.next().equals("2015-12-03")){
+while(!DATE.INSTANCE.next().equals("2013-11-02")){
     try{
         Map<String,List<Horse>> rankedHorses = ATGApi.getInstance().getRankedHorses(DATE.INSTANCE.toString())
 

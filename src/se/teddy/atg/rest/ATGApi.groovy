@@ -169,9 +169,9 @@ class ATGApi {
         getJson(path, null)
     }
     public static Map getJson(String path, Map parameters){
-        client.setProxy("emea-proxy.uk.oracle.com", 80, "http")
+        //client.setProxy("emea-proxy.uk.oracle.com", 80, "http")
         client.getClient().params.setParameter("http.connection.timeout", new Integer(700))
-        client.getClient().params.setParameter("http.socket.timeout", new Integer(700))
+        client.getClient().params.setParameter("http.socket.timeout", new Integer(1700))
 
         def map
         def cachePath = path

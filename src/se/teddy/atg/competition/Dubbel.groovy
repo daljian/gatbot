@@ -1,17 +1,25 @@
 package se.teddy.atg.competition
 
+import groovy.json.JsonBuilder
+import se.teddy.atg.race.RACE
 import se.teddy.atg.race.Race
 import se.teddy.atg.utils.CONDITIONS
 import se.teddy.atg.utils.DATE
+import se.teddy.atg.utils.FILTERS
 import se.teddy.atg.utils.WALLET
 
 /**
  * Created by gengdahl on 2015-12-07.
  */
 class Dubbel extends Competition {
-    Dubbel(Map<String, ?> data) {
-        super('dd', data)
+
+    Dubbel(String type, Map<String, ?> data) {
+        super(type, data)
     }
+    private def getOddsMatrix(){
+        details.pools.get(name).comboOdds
+    }
+
 
     /**
      * If running simulation, you can place a bet on
@@ -27,38 +35,52 @@ class Dubbel extends Competition {
     def placeBet(def bet) {
         def payBack = 0
         if (isWin()){
-            payBack = getOdds()*bet
+            payBack = getBetOdds()*bet
+        }
+        if (FILTERS.ENABLED_PRINTOUTS_DAILY_BETS.exists(this.getClass().getName())){
+            println "${name.toUpperCase()} ${DATE.INSTANCE} ${winLooseMarkers}"
         }
         payBack
     }
 
-    /**
-     * Evaluate if this competition is bettable
-     * and return the suggested amount to bet.
-     *
-     * @return Suggested amount to bet, can be 0
-     */
+
+
+
     @Override
     def getBet() {
-        println "DD ${DATE.INSTANCE} ${winLooseMarkers}"
-        def bet = 100
+        def bet = CONDITIONS.BET_FIXED_AMOUNT.get()
         races.each {race ->
-            if (!race.isBettable()){
+            if (race.isBettable()){
+                if (WALLET.INSTANCE.get() > 0){
+                    bet += WALLET.INSTANCE.get()*CONDITIONS.BET_VARIABLE_FACTOR.get()
+                }
+            }else{
                 bet = 0
-                println " race ${race.id} is not bettable"
             }
         }
         if (bet > 0){
-            def oddsMatrix =  details.pools.dd.comboOdds
+
             def xIndex = races[0].rankedHorses[0].startNumber -1
             def yIndex = races[1].rankedHorses[0].startNumber -1
-            def odds = oddsMatrix[xIndex][yIndex]
-            if (odds/100 < CONDITIONS.MIN_ODDS.get() || odds/100 > CONDITIONS.MAX_ODDS.get()){
-                //println " odds are not bettable"
+            def odds = getOddsMatrix()[xIndex][yIndex]
+            if (odds < CONDITIONS.DUBBEL_MIN_WIN_ODDS.get() || odds > CONDITIONS.DUBBEL_MAX_WIN_ODDS.get()){
                 bet = 0
             }
         }
         bet
+    }
+    def getWinLoosePassLabel(){
+        def label = "NOT_KNOWN"
+        if (getBet() == 0){
+            label = "PASSED"
+        }else if (races[0].hasWinners() && races[1].hasWinners()){
+            if (isWin()){
+                label = "WIN"
+            }else{
+                label = "LOOSE"
+            }
+        }
+        label
     }
     boolean isWin(){
         def win = false
@@ -69,19 +91,29 @@ class Dubbel extends Competition {
         win
 
     }
-    private double getOdds(){
+    private int getBetOdds(){
         def odds = 0
-        if (races[0].bettable && races[1].bettable){
+        if (!races[0].cancelled && !races[1].cancelled){
             def xIndex = races[0].rankedHorses[0].startNumber-1
             def yIndex=races[1].rankedHorses[0].startNumber-1
-            odds =details.pools.dd.comboOdds[xIndex][yIndex]
+            odds = details.pools.get(name).comboOdds[xIndex][yIndex]
         }
-        odds/100
+        odds
+    }
+    private int getWinOdds(){
+        def odds = 0
+        if (races[0].hasWinners() && races[1].hasWinners()){
+            def xIndex = races[0].winners[0].startNumber - 1
+            def yIndex=races[1].winners[0].startNumber - 1
+            odds = details.pools.get(name).comboOdds[xIndex][yIndex]
+        }
+        odds
     }
     String getWinLooseMarkers(){
-        "${getWinLooseMarker(races[0])} ${getWinLooseMarker(races[1])} Odds: ${getOdds()} Wallet (before betting): ${WALLET.INSTANCE}"
+        "${getWinLooseMarker(races[0])} ${getWinLooseMarker(races[1])} Odds: ${getWinOdds()}(${getBetOdds()}) Status: ${getWinLoosePassLabel()}    Wallet: ${WALLET.INSTANCE}"
     }
     private String getWinLooseMarker(Race race){
+
         def actualWinner = "?"
         def bettedWinner = "?"
         if (race.hasWinners()){

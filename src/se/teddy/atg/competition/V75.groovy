@@ -33,4 +33,5 @@ class V75 extends Competition{
     def placeBet(Object bet) {
         return 0
     }
+
 }

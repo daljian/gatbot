@@ -3,7 +3,10 @@ package se.teddy.atg.race
 import se.teddy.atg.competition.Competition
 import se.teddy.atg.competition.CompetitionFactory
 import se.teddy.atg.race.Race
+import se.teddy.atg.utils.DATE
 import se.teddy.atg.utils.WALLET
+
+import java.time.DayOfWeek
 
 /**
  * Created by gengdahl on 2015-11-29.
@@ -29,13 +32,14 @@ class RaceDay {
     }
     public def placeBets(boolean verboseOutput){
         competitions.each {name, competition ->
-            //println "Competition ${competition}"
-            def bet = competition.bet
-            if (bet > 0){
-                WALLET.INSTANCE.remove(bet)
-                def payback = competition.placeBet(bet)
-                WALLET.INSTANCE.add(payback)
+            if (verboseOutput){
+                println "Competition ${competition}"
             }
+            def bet = competition.bet
+            //Always place bet, even if it's zero
+            WALLET.INSTANCE.remove(bet)
+            def payback = competition.placeBet(bet/100)
+            WALLET.INSTANCE.add(payback)
         }
 
     }

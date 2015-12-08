@@ -16,7 +16,7 @@ class OddsAwareHorse extends Horse {
         def totalDiff = 0;
         if (o instanceof OddsAwareHorse){
             OddsAwareHorse other = (OddsAwareHorse)o
-            totalDiff = (this.averageKmTime + odds/100) - (other.averageKmTime + other.odds/100)
+            totalDiff = (this.averageKmTime + odds/60) - (other.averageKmTime + other.odds/60)
         }
         return totalDiff
     }
