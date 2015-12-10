@@ -10,8 +10,6 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.zip.GZIPInputStream
-import java.util.zip.GZIPOutputStream
 
 import static java.nio.file.Files.createDirectories
 import static java.nio.file.Files.createFile

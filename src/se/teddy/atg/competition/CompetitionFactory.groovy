@@ -27,6 +27,7 @@ class CompetitionFactory {
                 return new Competition(type, data){
                     public def getBet(){0}
                     public def placeBet(def bet){0}
+                    public String getHumanReadableInfo(){"NO INFO"}
                 }
                 break
         }

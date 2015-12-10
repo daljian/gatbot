@@ -1,6 +1,5 @@
 package se.teddy.atg.race
 
-import groovy.json.JsonBuilder
 import se.teddy.atg.horse.Horse
 import se.teddy.atg.horse.OddsAwareHorse
 import se.teddy.atg.horse.WinningHorse

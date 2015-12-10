@@ -1,7 +1,5 @@
 package se.teddy.atg.competition
 
-import groovy.json.JsonBuilder
-import se.teddy.atg.race.RACE
 import se.teddy.atg.race.Race
 import se.teddy.atg.utils.CONDITIONS
 import se.teddy.atg.utils.DATE
@@ -38,7 +36,7 @@ class Dubbel extends Competition {
             payBack = getBetOdds()*bet
         }
         if (FILTERS.ENABLED_PRINTOUTS_DAILY_BETS.exists(this.getClass().getName())){
-            println "${name.toUpperCase()} ${DATE.INSTANCE} ${winLooseMarkers}"
+            println humanReadableInfo
         }
         payBack
     }
@@ -59,7 +57,6 @@ class Dubbel extends Competition {
             }
         }
         if (bet > 0){
-
             def xIndex = races[0].rankedHorses[0].startNumber -1
             def yIndex = races[1].rankedHorses[0].startNumber -1
             def odds = getOddsMatrix()[xIndex][yIndex]
@@ -69,6 +66,11 @@ class Dubbel extends Competition {
         }
         bet
     }
+    @Override
+    public String getHumanReadableInfo(){
+        "${name.toUpperCase()} ${timestamp} ${winLooseMarkers}"
+    }
+
     def getWinLoosePassLabel(){
         def label = "NOT_KNOWN"
         if (getBet() == 0){

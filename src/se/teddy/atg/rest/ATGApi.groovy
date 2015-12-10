@@ -1,10 +1,14 @@
 package se.teddy.atg.rest
+
+import groovy.json.JsonBuilder
+import groovyx.net.http.RESTClient
+
 /**
  * Created by ia on 2015-11-08.
  */
-import groovyx.net.http.RESTClient
 import se.teddy.atg.horse.Horse
 import se.teddy.atg.race.RACESTATS
+import se.teddy.atg.utils.CONDITIONS
 import se.teddy.atg.utils.WALLET
 
 import static groovyx.net.http.ContentType.JSON
@@ -21,7 +25,8 @@ class ATGApi {
 
 
 
-    static def cache = new Cache('../../../../cache/atg/services/v1')
+    private static def cache = null
+
     public String getCurrentOdds(String dateString, boolean headers){
         String line = ""
         getDDIds("calendar/day/${dateString}").each {
@@ -170,10 +175,7 @@ class ATGApi {
     }
     public static Map getJson(String path, Map parameters){
         //client.setProxy("emea-proxy.uk.oracle.com", 80, "http")
-        client.getClient().params.setParameter("http.connection.timeout", new Integer(700))
-        client.getClient().params.setParameter("http.socket.timeout", new Integer(1700))
-
-        def map
+        def map = null
         def cachePath = path
         if (parameters != null){
             cachePath += "?"
@@ -182,25 +184,29 @@ class ATGApi {
             }
             cachePath -= "&"
         }
-        if (cache.exists(cachePath)){
-            map = cache.get(cachePath)
-        }else{
-            //print "HTTP GET ${client.getUri()}${cachePath}"
-/*
-            try{
-                synchronized(this){
-                    this.wait(250);
-                }
-            }catch(Exception ex){
-
+        if (CONDITIONS.CACHE_ENABLED.get()){
+            if (cache == null){
+                cache = new Cache('../../../../cache/atg/services/v1')
             }
-            */
+            boolean cacheHit = false
+
+            if (cache.exists(cachePath)){
+                cacheHit = true
+                map = cache.get(cachePath)
+            }
+        }
+        if (map == null){
             try{
+                client.getClient().params.setParameter("http.connection.timeout", new Integer(5000))
+                client.getClient().params.setParameter("http.socket.timeout", new Integer(5000))
                 def resp = client.get(path: path, contentType: JSON, query:parameters)
                 assert resp.status == 200  // HTTP response code; 404 means not found, etc.
-                cache.put(cachePath, resp.data)
+                if (CONDITIONS.CACHE_ENABLED.get()) {
+                    cache.put(cachePath, resp.data)
+                }
                 map = resp.data
             }catch(Exception ex){
+                println "Failed to process request ${client.getUri()}${cachePath}"
                 map = new HashMap()
             }
         }

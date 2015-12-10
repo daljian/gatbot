@@ -4,36 +4,29 @@ import groovy.json.JsonBuilder
 import se.teddy.atg.race.RACE
 import se.teddy.atg.race.Race
 import se.teddy.atg.rest.ATGApi
+import se.teddy.atg.utils.DATE
 import se.teddy.atg.utils.FILTERS
+
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * Created by gengdahl on 2015-11-29.
  */
-abstract class Competition {
-    enum KEY{
-        ID('id'),
-        RACES('races'),
-        START_SCHEDULED('scheduledStartTime'),
-        START_ACTUAL('startTime'),
-        STATUS('status'),
-        TRACKS('82');
+abstract class Competition implements Comparable{
 
-        private String name;
-        private KEY(String name){
-            this.name = name;
-        }
-        String getValue(){
-            return name;
-        }
-    }
     String name;
     Map<String, ?> overview
     Map <String, ?> details
-    def id
-    public Competition(def name, Map<String, ?> data){
+    String id
+    public Competition(String name, Map<String, ?> data){
         this.name = name;
         this.overview = data;
         this.id = data[KEY.ID.value];
+        if (id == null){
+            new JsonBuilder(data).toPrettyString()
+        }
 
     }
     public def getName(){
@@ -58,13 +51,41 @@ abstract class Competition {
     public boolean isEnabled(){
         return FILTERS.ENABLED_COMPETITION_TYPES.exists(getClass().getName())
     }
+    public String getTimestamp(){
+        return overview[KEY.START_SCHEDULED.value]
+    }
+    public long getStartTimeMillis(){
+        return LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_LOCAL_DATE_TIME).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
     /**
+     * Compare by competition start time; past,now,future
+     * @param o
+     * @return
+     */
+    @Override
+    int compareTo(Object o) {
+        Competition other = (Competition)o
+        LocalDateTime myDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        LocalDateTime yourDateTime = LocalDateTime.parse(other.timestamp, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return myDateTime.compareTo(yourDateTime);
+    }
+        /**
      * Evaluate if this competition is bettable
      * and return the suggested amount to bet.
      *
      * @return Suggested amount to bet, can be 0
      */
     public abstract def getBet();
+    /**
+     * Get human readable information about competition.
+     * If competition is in future, the current suggested
+     * bet is returned.
+     *
+     * If competition is in the passed, the result will also
+     * be present.
+     * @return Time adjusted human readable information about competition.
+     */
+    public abstract String getHumanReadableInfo();
 
     /**
      * If running simulation, you can place a bet on

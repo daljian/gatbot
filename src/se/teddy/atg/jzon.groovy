@@ -1,7 +1,4 @@
 #!/usr/bin/env groovy
-import groovy.json.JsonBuilder
-import groovy.json.JsonSlurper
-
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -11,7 +8,6 @@ import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
 import static java.nio.file.Files.createFile
-
 
 public String zip(String s){
     def targetStream = new ByteArrayOutputStream()

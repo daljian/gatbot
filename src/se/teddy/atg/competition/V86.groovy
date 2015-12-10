@@ -33,5 +33,7 @@ class V86 extends Competition{
     def placeBet(Object bet) {
         return 0
     }
+    @Override
+    public String getHumanReadableInfo(){"NO INFO"}
 
 }

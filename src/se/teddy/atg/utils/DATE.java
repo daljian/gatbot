@@ -1,7 +1,7 @@
 package se.teddy.atg.utils;
 
 import java.time.LocalDate;
-import java.time.Month;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -55,6 +55,8 @@ public enum DATE {
 
         tlDate.set(LocalDate.parse(dateString, formatter));
     }
+
+
     public LocalDate getLocalDate(){
         return tlDate.get();
     }

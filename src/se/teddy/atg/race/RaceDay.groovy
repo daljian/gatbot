@@ -1,12 +1,9 @@
 package se.teddy.atg.race
 
+import groovy.json.JsonBuilder
 import se.teddy.atg.competition.Competition
 import se.teddy.atg.competition.CompetitionFactory
-import se.teddy.atg.race.Race
-import se.teddy.atg.utils.DATE
 import se.teddy.atg.utils.WALLET
-
-import java.time.DayOfWeek
 
 /**
  * Created by gengdahl on 2015-11-29.
@@ -42,6 +39,11 @@ class RaceDay {
             WALLET.INSTANCE.add(payback)
         }
 
+    }
+    public List<Competition> listCompetitions(){
+        List<Competition> list = competitions.values().toList()
+        Collections.sort(list)
+        list
     }
 
 
