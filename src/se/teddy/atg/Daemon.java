@@ -28,14 +28,14 @@ public class Daemon {
   public static void main(String[] args){
     CONDITIONS.MIN_WIN_MARGIN.set(0);
     CONDITIONS.DUBBEL_MIN_WIN_MARGIN.set(0);
-    CONDITIONS.DUBBEL_MAX_WIN_ODDS.set(30000);
+    CONDITIONS.DUBBEL_MAX_WIN_ODDS.set(25000);
     CONDITIONS.DUBBEL_MIN_WIN_ODDS.set(1);
     CONDITIONS.BET_FIXED_AMOUNT.set(100);
     CONDITIONS.BET_VARIABLE_FACTOR.set(0);
     CONDITIONS.DEPOSIT_MONTHLY_AMOUNT.set(0);
     CONDITIONS.CACHE_ENABLED.set(Boolean.FALSE);
 
-    FILTERS.ENABLED_COMPETITION_TYPES.add(DagensDubbel.class.getName()).add(LunchDubbel.class.getName());
+    FILTERS.ENABLED_COMPETITION_TYPES.add(DagensDubbel.class.getName());
     FILTERS.ENABLED_PRINTOUTS_DAILY_BETS.add(DagensDubbel.class.getName()).add(LunchDubbel.class.getName());
     FILTERS.ENABLED_WEEK_DAYS.add(MONDAY.toString())
             .add(TUESDAY.toString())
@@ -44,30 +44,49 @@ public class Daemon {
             .add(FRIDAY.toString())
             .add(SATURDAY.toString())
             .add(SUNDAY.toString());
+    Object semaphore = new Object();
+    try{
+      synchronized(semaphore) {
+        semaphore.wait(5 * 60 * 1000); //Wait five minutes until we start to allow time
+        //for clock to adjust to correct time and timezone
+      }
+    }catch(Exception ex){
+      ex.printStackTrace();
+    }
 
-    new Daemon().scheduleTodaysNotifications();
+    new Daemon().daemonLoop();
 
   }
   public void daemonLoop(){
-    scheduleTodaysNotifications();
     String today = DATE.INSTANCE.toString();
+    System.out.println("Daemon started " + today);
+    scheduleTodaysNotifications(false); //suggestions
+    scheduleTodaysNotifications(true);  //Results
     while(true){
       try{
-        this.wait(4*60*60*1000); //check if it's a new day every four hours.
-                                 //I doubt there will be a race at 4AM..
+        synchronized(this){
+          this.wait(4*60*60*1000); //check if it's a new day every four hours.
+          //I doubt there will be a race at 4AM..
+        }
         if (!today.equals(DATE.INSTANCE.reset().toString())){
           today = DATE.INSTANCE.toString();
-          scheduleTodaysNotifications();
+          scheduleTodaysNotifications(false); //suggestions
+          scheduleTodaysNotifications(true);  //Results
         }
       }catch(Exception ex){
         ex.printStackTrace();
-        
+
 
       }
 
     }
   }
-  public void scheduleTodaysNotifications(){
+
+  /**
+   *
+   * @param results
+   */
+  public void scheduleTodaysNotifications(boolean results){
     List<Competition> competitions = new ArrayList<Competition>(0);
     try{
       if (FILTERS.ENABLED_WEEK_DAYS.exists(DATE.INSTANCE.getLocalDate().getDayOfWeek().toString())){
@@ -77,18 +96,20 @@ public class Daemon {
       }
       for (Competition competition : competitions){
         if (competition.getStartTimeMillis() > System.currentTimeMillis()){
-          new Timer().schedule(new Notifier(competition),competition.getStartTimeMillis() - System.currentTimeMillis() - 30 * 60 * 1000);
-          new Timer().schedule(new Notifier(competition),competition.getStartTimeMillis() - System.currentTimeMillis() + 30 * 60 * 1000);
+          if (results){
+            new Timer().schedule(new Notifier(competition),competition.getStartTimeMillis() - System.currentTimeMillis() + 45 * 60 * 1000);
+          }else{
+            new Timer().schedule(new Notifier(competition),competition.getStartTimeMillis() - System.currentTimeMillis() - 15 * 60 * 1000);
+          }
+        }else{
+          new Timer().schedule(new Notifier(competition),10);
         }
-        new Timer().schedule(new Notifier(competition),30000);
       }
     }catch(Exception ex){
       ex.printStackTrace();
     }
   }
-  public void setup(){
 
-  }
   private class Notifier extends TimerTask{
     private Competition competition;
     public Notifier(Competition competition){
@@ -105,9 +126,9 @@ public class Daemon {
 
       String subject;
       if (competition.getStartTimeMillis() < System.currentTimeMillis()){
-        subject = "Results: " + competition.getName();
+        subject = DATE.INSTANCE.toString() + ": results: " + competition.getName().toString().toUpperCase();
       }else{
-        subject = "Bet: " + competition.getName();
+        subject = DATE.INSTANCE.toString() + ": advice: " + competition.getName().toString().toUpperCase();
       }
       Gmail.sendNotification(subject, competition.getHumanReadableInfo());
 

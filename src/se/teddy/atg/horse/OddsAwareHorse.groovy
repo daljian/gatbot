@@ -22,4 +22,6 @@ class OddsAwareHorse extends Horse {
     }
 
 
+
+
 }

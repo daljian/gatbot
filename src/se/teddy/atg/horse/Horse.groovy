@@ -1,6 +1,7 @@
 package se.teddy.atg.horse
 
 import se.teddy.atg.rest.ATGApi
+import se.teddy.atg.utils.TUNING
 
 /**
  * Created by ia on 2015-11-15.
@@ -14,6 +15,7 @@ class Horse implements Comparable{
     final int NO_TIME = 100000
     //For simulations we want to limit known facts by setting a historical date
     String dateString;
+    String json = ""
     /**
      * Positive means trending faste, negative means teending slower
      */
@@ -26,8 +28,6 @@ class Horse implements Comparable{
         this.name = name
         this.dateString = dateString
         //print "[${id}:${name}]"
-
-        populate();
     }
     public String getDisplayName(){
         return "${startNumber}. ${name} ${getAverageKmTime()}"
@@ -49,6 +49,12 @@ class Horse implements Comparable{
         return getAverageKmTime(this.upComingRaceDistance)
     }
 
+    public long getSyntheticAverageKmTime(){
+        def averageTime = NO_TIME
+        def averageDiff = 0
+        raceTimes
+    }
+
     public long getAverageKmTime(def distance){
         def averageTime = NO_TIME
         def averageDiff = 0
@@ -65,21 +71,22 @@ class Horse implements Comparable{
                 }
                 totalTime += raceTime
             }
-
-            averageTime = totalTime / raceTimes.get(distance).size();
-            def totalDiff = 0
-            diffs.each { diff ->
-                totalDiff += diff
-            }
-            if (diffs.size() != 0){
-                averageDiff = totalDiff / diffs.size()
+            if (raceTimes.get(distance).size() != 0){
+                averageTime = totalTime / raceTimes.get(distance).size();
+                def totalDiff = 0
+                diffs.each { diff ->
+                    totalDiff += diff
+                }
+                if (diffs.size() != 0){
+                    averageDiff = totalDiff / diffs.size()
+                }
             }
             //println "AVG: ${averageTime} AVG-DIFF: ${averageDiff} RaceTimes: ${raceTimes.get(upComingRaceDistance)} Diffs: ${diffs}"
         }
         if(upComingRaceDistance == distance){
-            averageTime - (averageDiff/2)
+            averageTime - (averageDiff/TUNING.DIFF_DIVIDER.doubleValue())
         }else{
-            (averageTime - (averageDiff/2))
+            (averageTime - (averageDiff/TUNING.DIFF_DIVIDER.doubleValue()))
         }
     }
 
@@ -106,7 +113,7 @@ class Horse implements Comparable{
         }
         return totalDiff
     }
-    private void populate(){
+    void populate(){
 
         if (id != null){
             Map jsonData = ATGApi.getJson("horses/${id}/results", ['stopdate':dateString])
@@ -126,6 +133,10 @@ class Horse implements Comparable{
                     if (raceTimes.get(distance).size() <7){
                         raceTimes.get(distance).add(time)
                     }
+                    def startMethod = record.race.startMethod
+                    def condition = record.track.condition
+
+                    HORSESTATS.REPO.addPerformance(distance,startMethod, condition, time);
                 }
 
             }

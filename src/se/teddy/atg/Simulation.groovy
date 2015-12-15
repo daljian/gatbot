@@ -2,6 +2,13 @@ package se.teddy.atg
 
 import se.teddy.atg.competition.DagensDubbel
 import se.teddy.atg.competition.LunchDubbel
+import se.teddy.atg.competition.V3
+import se.teddy.atg.competition.V5
+import se.teddy.atg.competition.V64
+import se.teddy.atg.competition.V65
+import se.teddy.atg.competition.V75
+import se.teddy.atg.competition.V86
+import se.teddy.atg.horse.HORSESTATS
 import se.teddy.atg.race.ANALYZER
 import se.teddy.atg.race.RACE
 import se.teddy.atg.race.RACESTATS
@@ -22,7 +29,7 @@ import static java.time.DayOfWeek.*
 // Setup filters to use;
 // A filter is used to exclude or include something
 //ALL: FILTERS.ENABLED_COMPETITION_TYPES.add(Komb.getName()).add(Plats.getName()).add(Raket.getName()).add(Trio.getName()).add(Tvilling.getName()).add(V3.getName()).add(V4.getName()).add(V5.getName()).add(V64.getName()).add(V65.getName()).add(V86.getName()).add(Vinnare.getName()).add(VinnareOchPlats.getName())
-//FILTERS.ENABLED_COMPETITION_TYPES.add(V3.getName()).add(V5.getName()).add(V64.getName()).add(V65.getName()).add(V86.getName()).add(V75.getName()).add(DagensDubbel.getName())
+//FILTERS.ENABLED_COMPETITION_TYPES.add(V3.getName()).add(V5.getName()).add(V64.getName()).add(V65.getName()).add(V86.getName()).add(V75.getName()).add(DagensDubbel.getName()).add(LunchDubbel.getName())
 FILTERS.ENABLED_COMPETITION_TYPES.add(DagensDubbel.getName()).add(LunchDubbel.getName())
 FILTERS.ENABLED_WEEK_DAYS.add(MONDAY.toString())
         .add(TUESDAY.toString())
@@ -37,9 +44,9 @@ FILTERS.ENABLED_PRINTOUTS_DAILY_BETS.add(DagensDubbel.getName()).add(LunchDubbel
 
 // Setup conditions to use
 // conditions are used to evaluate how/if/how much to bet on a race
-CONDITIONS.MIN_WIN_MARGIN.set(0)
-CONDITIONS.DUBBEL_MIN_WIN_MARGIN.set(0)
-CONDITIONS.DUBBEL_MAX_WIN_ODDS.set(30000)
+CONDITIONS.MIN_WIN_MARGIN.set(Integer.MIN_VALUE)
+CONDITIONS.DUBBEL_MIN_WIN_MARGIN.set(Integer.MIN_VALUE)
+CONDITIONS.DUBBEL_MAX_WIN_ODDS.set(25000)
 CONDITIONS.DUBBEL_MIN_WIN_ODDS.set(1)
 CONDITIONS.BET_FIXED_AMOUNT.set(100)
 CONDITIONS.BET_VARIABLE_FACTOR.set(0)
@@ -54,6 +61,7 @@ def TEST_INTERVAL_2014 = ['2013-12-31','2015-01-01']
 def TEST_INTERVAL_CURRENT_YEAR = ['2014-12-31', DATE.INSTANCE.reset().next().toString()]
 def TEST_INTERVAL_YESTERDAY = [DATE.INSTANCE.reset().previous().previous().toString(), DATE.INSTANCE.reset().toString()]
 def TEST_INTERVAL_TODAY = [DATE.INSTANCE.reset().previous().toString(), DATE.INSTANCE.reset().next().toString()]
+def TEST_INTERVAL_TOMORROW = [DATE.INSTANCE.reset().toString(), DATE.INSTANCE.reset().next().next().toString()]
 
 
 
@@ -113,3 +121,4 @@ RACESTATS.REPO.stats.each {id, result ->
     }
 }
 println ANALYZER.INSTANCE
+HORSESTATS.REPO.preRenderedFactors

@@ -1,7 +1,9 @@
 package se.teddy.atg.race
 
 import se.teddy.atg.horse.Horse
+import se.teddy.atg.horse.MinOddsHorse
 import se.teddy.atg.horse.OddsAwareHorse
+import se.teddy.atg.horse.SyntheticHorse
 import se.teddy.atg.horse.WinningHorse
 import se.teddy.atg.utils.CONDITIONS
 import se.teddy.atg.utils.DATE
@@ -56,6 +58,10 @@ class Race {
      * @return True if race is bettable, false if not
      */
     public boolean isBettable(){
+        if (lineUp[0] instanceof MinOddsHorse){
+            return true
+
+        }
         def enoughHorseData = true;
         def shortLineup = lineUp
         if (lineUp.size() > 4){
@@ -111,7 +117,15 @@ class Race {
         def startNumber = 1;
         data.starts.each{start ->
             if (!scratchings.contains(startNumber)){
-                lineUp.add(new OddsAwareHorse(startNumber, start.horse.id,start.horse.name, DATE.INSTANCE.toString(), data.distance, start.pools.vinnare.odds))
+
+//                Horse horse = new MinOddsHorse(startNumber, start.horse.id,start.horse.name, DATE.INSTANCE.toString(),
+//                        data.distance, start.pools.vinnare.odds)
+                  Horse horse = new OddsAwareHorse(startNumber, start.horse.id,start.horse.name, DATE.INSTANCE.toString(),
+                        data.distance, start.pools.vinnare.odds)
+//                Horse horse = new SyntheticHorse(startNumber, start.horse.id,start.horse.name, DATE.INSTANCE.toString(),
+//                        data.distance, data.startMethod, data.track.condition, start.pools.vinnare.odds)
+                horse.populate()
+                lineUp.add(horse);
             }
             startNumber++
         }

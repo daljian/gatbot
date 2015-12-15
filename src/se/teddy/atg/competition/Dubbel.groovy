@@ -47,11 +47,13 @@ class Dubbel extends Competition {
     @Override
     def getBet() {
         def bet = CONDITIONS.BET_FIXED_AMOUNT.get()
+        def ddWinDiff = 0
         races.each {race ->
             if (race.isBettable()){
                 if (WALLET.INSTANCE.get() > 0){
                     bet += WALLET.INSTANCE.get()*CONDITIONS.BET_VARIABLE_FACTOR.get()
                 }
+                ddWinDiff += race.getRankedHorses()[1].getAverageKmTime() - race.getRankedHorses()[0].getAverageKmTime()
             }else{
                 bet = 0
             }
@@ -61,6 +63,9 @@ class Dubbel extends Competition {
             def yIndex = races[1].rankedHorses[0].startNumber -1
             def odds = getOddsMatrix()[xIndex][yIndex]
             if (odds < CONDITIONS.DUBBEL_MIN_WIN_ODDS.get() || odds > CONDITIONS.DUBBEL_MAX_WIN_ODDS.get()){
+                bet = 0
+            }
+            if (ddWinDiff < CONDITIONS.DUBBEL_MIN_WIN_MARGIN.get()){
                 bet = 0
             }
         }

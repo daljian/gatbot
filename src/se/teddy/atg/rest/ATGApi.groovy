@@ -80,7 +80,7 @@ class ATGApi {
                 def startNumber = 1;
                 race.starts.each{start ->
                     if (!scratchings.contains(startNumber)){
-                        lineUp.get(ddindex).add(new Horse(startNumber, start.horse.id,start.horse.name, dateString, race.distance))
+                        lineUp.get(ddindex).add(new Horse(startNumber, start.horse.id,start.horse.name, dateString, race.distance, race.startMethod, race.track.condition))
                     }
                     startNumber++
                 }
@@ -174,7 +174,7 @@ class ATGApi {
         getJson(path, null)
     }
     public static Map getJson(String path, Map parameters){
-        //client.setProxy("emea-proxy.uk.oracle.com", 80, "http")
+        client.setProxy("emea-proxy.uk.oracle.com", 80, "http")
         def map = null
         def cachePath = path
         if (parameters != null){
@@ -197,14 +197,16 @@ class ATGApi {
         }
         if (map == null){
             try{
-                client.getClient().params.setParameter("http.connection.timeout", new Integer(5000))
-                client.getClient().params.setParameter("http.socket.timeout", new Integer(5000))
-                def resp = client.get(path: path, contentType: JSON, query:parameters)
-                assert resp.status == 200  // HTTP response code; 404 means not found, etc.
-                if (CONDITIONS.CACHE_ENABLED.get()) {
-                    cache.put(cachePath, resp.data)
+                synchronized (client){
+                    client.getClient().params.setParameter("http.connection.timeout", new Integer(5000))
+                    client.getClient().params.setParameter("http.socket.timeout", new Integer(5000))
+                    def resp = client.get(path: path, contentType: JSON, query:parameters)
+                    assert resp.status == 200  // HTTP response code; 404 means not found, etc.
+                    if (CONDITIONS.CACHE_ENABLED.get()) {
+                        cache.put(cachePath, resp.data)
+                    }
+                    map = resp.data
                 }
-                map = resp.data
             }catch(Exception ex){
                 println "Failed to process request ${client.getUri()}${cachePath}"
                 map = new HashMap()

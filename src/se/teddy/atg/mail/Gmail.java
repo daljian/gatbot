@@ -40,6 +40,8 @@ public class Gmail {
       message.setText(notification);
 
       Transport.send(message);
+      //System.out.println("Subject: " + subject );
+      //System.out.println("Body:    " + notification );
 
     } catch (MessagingException e) {
       throw new RuntimeException(e);
